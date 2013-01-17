@@ -15,6 +15,8 @@ var languages = [
     'en',
 ];
 
+var lastest = null;
+
 function getClass(obj) {
   if (typeof obj === "undefined")
     return "undefined";
@@ -56,25 +58,65 @@ function RemoveBR( strText )
     return strText.replace(regEx, "");
 }
 
-function injectScript(source)
+function injectEle(tag, type, source, name)
 {
-    var elem = document.createElement("script");
-    elem.type = "text/javascript";
+    var elem = document.createElement(tag);
+    elem.type = type;
     elem.innerHTML = source;
-    document.head.appendChild(elem);
+    document[name].appendChild(elem);
 }
 
 function inject_code_to_page(){
     var code = 'setTimeout("document.location.reload(true)",300000);';
-    injectScript(code);
+    injectEle("script", "text/javascript",code, 'head');
+}
+
+function get_last_record(){
+    var ret = $.mongohq.documents.all({
+        db_name: 'cuhk',
+        col_name: 'mpf',
+        query: {
+            sort: JSON.stringify({ts: -1}),
+            limit: 1,
+        },
+        success: function(result){
+            lastest = result[0];
+        }
+    });
 }
 
 function save_record_to_mongohq(record){
-    $.mongohq.documents.create({
-        db_name: 'cuhk',
-        col_name: 'mpf',
-        params: JSON.stringify(record)
-    });
+    function real_save(record){
+        $.mongohq.documents.create({
+            db_name: 'cuhk',
+            col_name: 'mpf',
+            params: JSON.stringify(record)
+        });
+    }
+    //try{
+    //    JSON.stringify(lastest.funds);
+    //} catch (error) {
+    //    real_save(record);
+    //}
+    //if(JSON.stringify(record.document.funds)!=
+    //   JSON.stringify(lastest.funds)){
+    //    real_save(record);
+    //}
+    if(record.document.total_fund != lastest.total_fund){
+        real_save(record);
+        D_value = record.document.total_fund - lastest.total_fund;
+        if(D_value>0){
+            desc = '恭喜，您的强基金账户收入了' + D_value +'元';
+        }else{
+            desc = '请注意，您的强基金账户损失了' + (0-D_value) +'元';
+        }
+        html = "<div style='visibility:hidden;display:hidden;'>";
+        html += "<iframe id='tts-iframe' style='display:none' width='1px' ";
+        html += "height='1px' src='http://translate.google.cn/translate_tts?q=";
+        html += desc;
+        html += "&tl=zh-CN' ></iframe>";
+        injectEle("span", "", html, 'body');
+    }
 }
 
 function parse_and_save_record(){
@@ -103,10 +145,10 @@ function parse_and_save_record(){
     record['minute'] = d.getMinutes();
     record['second'] = d.getSeconds();
     record['ts'] = Date.now();
-    var doc = {
+    var newone = {
         document: record
     };
-    save_record_to_mongohq(doc);
+    save_record_to_mongohq(newone);
 }
 function classify_page(){
     if(page_titles.indexOf(document.title)!=-1){
@@ -116,5 +158,5 @@ function classify_page(){
     if(history_page_titles.indexOf(document.title)!=-1){
     }
 }
-
-classify_page();
+get_last_record();
+setTimeout('classify_page()', 2000);
