@@ -1,9 +1,14 @@
 $.mongohq.authenticate({ apikey: '5wtp7my3207bmn7vdotc'});
-var titles = [
+var page_titles = [
     "強積金／職業退休計劃 - 香港滙豐",
     "强积金／职业退休计划 - 香港汇丰",
     "MPF / ORSO - HSBC in Hong Kong",
 ];
+var subpage_titles = [
+    '強積金過往供款紀錄 - 香港滙豐',
+    '强积金过往供款纪录 - 香港汇丰',
+    'MPF Contribution History - HSBC in Hong Kong'
+]
 var languages = [
     'zh-TW',
     '',
@@ -84,9 +89,25 @@ function save_record_to_mongohq(record){
 }
 
 function parse_and_save_record(){
-    
+    var record = {};
+    var d = new Date();
+    record['year'] = d.getFullYear();
+    record['month'] = d.getMonth()+1;
+    record['date'] = d.getDate();
+    record['hour'] = d.getHours();
+    record['minute'] = d.getMinutes();
+    record['second'] = d.getSeconds();
+    record['ts'] = Date.now();
+    var doc = {
+        document: record
+    };
 }
 function classify_page(){
-    
+    if($.inArray(document.title, page_titles)){
+        parse_and_save_record();
+    }
+    if($.inArray(document.title, subpage_titles)){
+        
+    }
 }
 classify_page();
