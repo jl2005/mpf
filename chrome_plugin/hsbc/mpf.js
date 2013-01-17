@@ -1,12 +1,12 @@
 $.mongohq.authenticate({ apikey: '5wtp7my3207bmn7vdotc'});
 var page_titles = [
-    "Š·e½ğ£¯Âš˜IÍËĞİÓ‹„ - Ïã¸ÛœóØS",
-    "Ç¿»ı½ğ£¯Ö°ÒµÍËĞİ¼Æ»® - Ïã¸Û»ã·á",
+    "å¼·ç©é‡‘ï¼è·æ¥­é€€ä¼‘è¨ˆåŠƒ - é¦™æ¸¯æ»™è±",
+    "å¼ºç§¯é‡‘ï¼èŒä¸šé€€ä¼‘è®¡åˆ’ - é¦™æ¸¯æ±‡ä¸°",
     "MPF / ORSO - HSBC in Hong Kong",
 ];
-var subpage_titles = [
-    'Š·e½ğß^Íù¹©¿î¼oä› - Ïã¸ÛœóØS',
-    'Ç¿»ı½ğ¹ıÍù¹©¿î¼ÍÂ¼ - Ïã¸Û»ã·á',
+var history_page_titles = [
+    'å¼·ç©é‡‘éå¾€ä¾›æ¬¾ç´€éŒ„ - é¦™æ¸¯æ»™è±',
+    'å¼ºç§¯é‡‘è¿‡å¾€ä¾›æ¬¾çºªå½• - é¦™æ¸¯æ±‡ä¸°',
     'MPF Contribution History - HSBC in Hong Kong'
 ]
 var languages = [
@@ -61,22 +61,11 @@ function injectScript(source)
     var elem = document.createElement("script");
     elem.type = "text/javascript";
     elem.innerHTML = source;
-    return document.head.appendChild(elem);
+    document.head.appendChild(elem);
 }
 
-function inject_code_to_list_page(){
-    var code = [
-        'var cur_page = parseInt($("#RecNo").attr("value"));',
-        'var next = cur_page+1;',
-        'var text = $("td[colspan=7]").html();',
-        'var step = "&nbsp;/&nbsp;".length;',
-        'var indexStart = text.indexOf("&nbsp;/&nbsp;")+step;',
-        'var indexEnd = text.indexOf("<a", indexStart);',
-        'var total = parseInt(text.substring(indexStart,indexEnd));',
-        'if(next<=3){ setTimeout("GoPage(next);",15000);}',
-        'else{ setTimeout("GoPage(1);",900000); }'
-    ];
-    code = code.join(' ');
+function inject_code_to_page(){
+    var code = 'setTimeout("document.location.reload(true)",300000);';
     injectScript(code);
 }
 
@@ -90,7 +79,23 @@ function save_record_to_mongohq(record){
 
 function parse_and_save_record(){
     var record = {};
+    var table = document.getElementsByClassName('hsbcTableStyle04')[2];
+    var trs = table.getElementsByTagName('tr');
+    var money = Array();
+    var total = 0.0;
+    for(var i=0;i<trs.length-1;i++){
+        var fund = {};
+        var tds = trs[i].getElementsByTagName('td');
+        fund['name'] = tds[0].innerText;
+        fund['code'] = tds[1].innerText;
+        fund['count'] = parseFloat(tds[2].innerText.replace(/,/g, ''));
+        total += fund['count'];
+        fund['percent'] = parseFloat(tds[3].innerText);
+        money.push(fund);
+    }
     var d = new Date();
+    record['funds'] = money;
+    record['total_fund'] = total;
     record['year'] = d.getFullYear();
     record['month'] = d.getMonth()+1;
     record['date'] = d.getDate();
@@ -101,13 +106,15 @@ function parse_and_save_record(){
     var doc = {
         document: record
     };
+    save_record_to_mongohq(doc);
 }
 function classify_page(){
-    if($.inArray(document.title, page_titles)){
+    if(page_titles.indexOf(document.title)!=-1){
+        inject_code_to_page();
         parse_and_save_record();
     }
-    if($.inArray(document.title, subpage_titles)){
-        
+    if(history_page_titles.indexOf(document.title)!=-1){
     }
 }
+
 classify_page();
