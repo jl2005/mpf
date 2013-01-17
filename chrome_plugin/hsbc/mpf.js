@@ -71,6 +71,13 @@ function inject_code_to_page(){
     injectEle("script", "text/javascript",code, 'head');
 }
 
+function desktop_notify(msg){
+    if (window.webkitNotifications.checkPermission() == 0) {
+      // 0 is PERMISSION_ALLOWED
+      window.webkitNotifications.createNotification(
+          'logo.gif', '汇丰强基金', msg).show();
+    }
+}
 function get_last_record(){
     var ret = $.mongohq.documents.all({
         db_name: 'cuhk',
@@ -110,6 +117,7 @@ function save_record_to_mongohq(record){
         }else{
             desc = '请注意，您的强基金账户损失了' + (0-D_value) +'元';
         }
+        desktop_notify(desc);
         html = "<div style='visibility:hidden;display:hidden;'>";
         html += "<iframe id='tts-iframe' style='display:none' width='1px' ";
         html += "height='1px' src='http://translate.google.cn/translate_tts?q=";
@@ -159,4 +167,7 @@ function classify_page(){
     }
 }
 get_last_record();
+document.body.addEventListener('click', function() {
+    window.webkitNotifications.requestPermission();
+});
 setTimeout('classify_page()', 2000);
