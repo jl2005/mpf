@@ -1,0 +1,21 @@
+{
+    "name": "MPF-HSBC",
+    "version": "0.1",
+    "manifest_version": 2,
+    "description": "Collect MPF Information",
+    "content_scripts": [
+        {
+            "matches": ["http://www.ebanking.hsbc.com.hk/*",
+                        "http://www1.ebanking.hsbc.com.hk/*"],
+            "js": ["jquery.min.js",
+                   "jquery.mongohq.js",
+                   "md5.js",
+                   "mpf.js"]
+        }
+    ],
+    "permissions": [
+        "http://www.ebanking.hsbc.com.hk/",
+        "https://api.mongohq.com/",
+        "http://www1.ebanking.hsbc.com.hk/",
+    ]
+}
