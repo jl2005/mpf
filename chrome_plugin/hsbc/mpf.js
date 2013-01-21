@@ -16,6 +16,7 @@ var languages = [
 ];
 
 var lastest = null;
+var records = null;
 
 function getClass(obj) {
   if (typeof obj === "undefined")
@@ -65,10 +66,75 @@ function injectEle(tag, type, source, name)
     elem.innerHTML = source;
     document[name].appendChild(elem);
 }
-
+function show_chart(){
+    var seriesOptions = [],
+        yAxisOptions = [],
+        seriesCounter = 0,
+        names = ['HSIF','VAEF','VEEF','VUEF', 'VSGF']
+        colors = Highcharts.getOptions().colors;
+        $.each(names, function(i, name){
+            seriesOptions[i] = {
+                name: name,
+                data: records.map(function (value, index, ar){
+                    for(var j=0;j<value.funds.length;j++){
+                        if(value.funds[j].code == name)
+                            return [value.ts, value.funds[j].count];
+                    }
+                }),
+            };
+        });
+        seriesOptions.push({
+            name: 'TOTAL',
+            data: records.map(function (value, index, ar){
+                return [value.ts, value.total_fund];
+            })
+        });
+        //alert(JSON.stringify(seriesOptions));
+        createChart();
+	// create the chart when all data is loaded
+	function createChart() {
+            chart = new Highcharts.StockChart({
+                chart: {
+                    renderTo: 'container'
+                },
+                rangeSelector: {
+                    selected: 4
+                },
+                yAxis: {
+                    labels: {
+                        formatter: function() {
+                            return (this.value > 0 ? '+' : '') + this.value + '%';
+                        }
+                    },
+                    plotLines: [{
+                        value: 0,
+                        width: 2,
+                        color: 'silver'
+                    }]
+                },
+                plotOptions: {
+                    series: {
+                        compare: 'percent',
+                        step: true,
+                    }
+                },
+                tooltip: {
+                    pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+                    valueDecimals: 2
+                },
+                series: seriesOptions
+            });
+        }
+}
 function inject_code_to_page(){
     var code = 'setTimeout("document.location.reload(true)",300000);';
     injectEle("script", "text/javascript",code, 'head');
+}
+function inject_chart_btn(){
+    var code = '<div style="position: absolute;right:550px;top:130px" id="showchart">';
+    code += 'Charts</div><div id="container"></div>';
+    injectEle("span", "", code, 'body');
+    $("#showchart").click(show_chart);
 }
 
 function desktop_notify(msg){
@@ -78,16 +144,18 @@ function desktop_notify(msg){
           'logo.gif', '汇丰强基金', msg).show();
     }
 }
-function get_last_record(){
+function get_records(){
     var ret = $.mongohq.documents.all({
         db_name: 'cuhk',
         col_name: 'mpf',
         query: {
-            sort: JSON.stringify({ts: -1}),
-            limit: 1,
+            sort: JSON.stringify({ts: 1}),
+            fields: JSON.stringify(['total_fund', 'ts', 'funds']),
+            limit: 100,
         },
         success: function(result){
-            lastest = result[0];
+            lastest = result[result.length-1];
+            records = result;
         }
     });
 }
@@ -158,15 +226,19 @@ function parse_and_save_record(){
     };
     save_record_to_mongohq(newone);
 }
+
 function classify_page(){
     if(page_titles.indexOf(document.title)!=-1){
         inject_code_to_page();
+        inject_chart_btn();
         parse_and_save_record();
     }
     if(history_page_titles.indexOf(document.title)!=-1){
+        inject_code_to_page();
     }
 }
-get_last_record();
+
+get_records();
 document.body.addEventListener('click', function() {
     window.webkitNotifications.requestPermission();
 });

@@ -10,7 +10,9 @@
             "js": ["jquery.min.js",
                    "jquery.mongohq.js",
                    "md5.js",
-                   "mpf.js"
+                   "mpf.js",
+                   "highstock.js",
+                   "exporting.js"
                    ]
         }
     ],
