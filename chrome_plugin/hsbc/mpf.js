@@ -80,8 +80,9 @@ function injectEle(tag, type, source, name)
 }
 
 function show_chart(){
-    var codes = ['HSIF','VAEF','VEEF','VUEF', 'VSGF'];
-    var names = ['HSIF','VAEF','VEEF','VUEF', 'VSGF'];
+    var codes = ['HSIF','VAEF','HSHF'];
+    //var codes = ['HSIF','VAEF','HSHF','VUEF', 'VSGF'];
+    var names = ['HSIF','VAEF','HSHF','VUEF', 'VSGF'];
     var series = [];
     $.each(codes, function(i, code){
         series[i] = {
