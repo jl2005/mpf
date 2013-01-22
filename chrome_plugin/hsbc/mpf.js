@@ -136,10 +136,19 @@ function show_chart(){
             }
         },
         tooltip: {
+            shared:true,
             formatter: function() {
-                    return '<b>'+ this.series.name +'</b><br/>'+
-                    this.x +': '+ this.y +' HKD';
-            }
+                var s = '<b>'+ this.x +'</b>';
+                var total = 0;
+                $.each(this.points, function(i, point) {
+                    s += '<br/>'+ point.series.name +': '+
+                        point.y +' $';
+                    total += point.y;
+                });
+                s += '<br/>TOTAL: '+ total+ ' $';
+
+                return s;
+            },
         },
         legend: {
             layout: 'vertical',
@@ -204,18 +213,18 @@ function show_stock_chart(){
                         return (this.value > 0 ? '+' : '') + this.value + '%';
                     }
                 },
-                //plotLines: [{
-                //    value: 0,
-                //    width: 2,
-                //    color: 'silver'
-                //}]
+                plotLines: [{
+                    value: 0,
+                    width: 2,
+                    color: 'silver'
+                }]
             },
-            //plotOptions: {
-            //    series: {
-            //        compare: 'percent',
-            //        step: true,
-            //    }
-            //},
+            plotOptions: {
+                series: {
+                    compare: 'percent',
+                    step: true,
+                }
+            },
             tooltip: {
                 pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
                 valueDecimals: 2
