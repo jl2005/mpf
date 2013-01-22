@@ -58,7 +58,19 @@ function RemoveBR( strText )
     var regEx = /(<br>)/g;
     return strText.replace(regEx, "");
 }
-
+function timeConverter(UNIX_timestamp){
+    var a = new Date(UNIX_timestamp);
+    var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var year = a.getFullYear();
+    //var month = months[a.getMonth()];
+    var month = a.getMonth()+1;
+    var date = a.getDate();
+    var hour = a.getHours();
+    var min = a.getMinutes();
+    var sec = a.getSeconds();
+    var time = year+'-'+month+'-'+date+' '+hour+':'+min+':'+sec ;
+    return time;
+}
 function injectEle(tag, type, source, name)
 {
     var elem = document.createElement(tag);
@@ -66,65 +78,151 @@ function injectEle(tag, type, source, name)
     elem.innerHTML = source;
     document[name].appendChild(elem);
 }
+
 function show_chart(){
+    var codes = ['HSIF','VAEF','VEEF','VUEF', 'VSGF'];
+    var names = ['HSIF','VAEF','VEEF','VUEF', 'VSGF'];
+    var series = [];
+    $.each(codes, function(i, code){
+        series[i] = {
+            name: code,
+            data: records.map(function (value, index, ar){
+                for(var j=0;j<value.funds.length;j++){
+                    if(value.funds[j].code == code)
+                        return value.funds[j].count;
+                }
+            })
+        };
+    });
+    categories = records.map(function (value, index, ar){
+        return timeConverter(value.ts);
+    });
+    
+    chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'container',
+            type: 'area',
+            marginRight: 130,
+            marginBottom: 25
+        },
+        title: {
+            text: 'Daily MPF',
+            x: -20 //center
+        },
+        subtitle: {
+            text: 'Source: hsbc.com',
+            x: -20
+        },
+        xAxis: {
+            categories: categories,
+            tickmarkPlacement: 'on',
+            title: {
+                enabled: false
+            }
+        },
+        yAxis: {
+            title: {
+                text: 'Money(HKD $)'
+            },
+            plotLines: [{
+                value: 0,
+                width: 1,
+                color: '#808080'
+            }],
+            labels: {
+                formatter: function() {
+                    return this.value / 1000;
+                }
+            }
+        },
+        tooltip: {
+            formatter: function() {
+                    return '<b>'+ this.series.name +'</b><br/>'+
+                    this.x +': '+ this.y +' HKD';
+            }
+        },
+        legend: {
+            layout: 'vertical',
+            align: 'right',
+            verticalAlign: 'top',
+            x: -10,
+            y: 100,
+            borderWidth: 0
+        },
+        plotOptions: {
+            area: {
+                stacking: 'normal',
+                lineColor: '#666666',
+                lineWidth: 1,
+                marker: {
+                    lineWidth: 1,
+                    lineColor: '#666666'
+                }
+            }
+        },
+        series: series
+    });
+}
+
+function show_stock_chart(){
     var seriesOptions = [],
         yAxisOptions = [],
         seriesCounter = 0,
-        names = ['HSIF','VAEF','VEEF','VUEF', 'VSGF']
+        names = ['HSIF','VAEF','VEEF','VUEF', 'VSGF'],
         colors = Highcharts.getOptions().colors;
-        $.each(names, function(i, name){
-            seriesOptions[i] = {
-                name: name,
-                data: records.map(function (value, index, ar){
-                    for(var j=0;j<value.funds.length;j++){
-                        if(value.funds[j].code == name)
-                            return [value.ts, value.funds[j].count];
-                    }
-                }),
-            };
-        });
-        seriesOptions.push({
-            name: 'TOTAL',
+    $.each(names, function(i, name){
+        seriesOptions[i] = {
+            name: name,
             data: records.map(function (value, index, ar){
-                return [value.ts, value.total_fund];
-            })
-        });
-        //alert(JSON.stringify(seriesOptions));
-        createChart();
-	// create the chart when all data is loaded
-	function createChart() {
-            chart = new Highcharts.StockChart({
-                chart: {
-                    renderTo: 'container'
-                },
-                rangeSelector: {
-                    selected: 4
-                },
-                yAxis: {
-                    labels: {
-                        formatter: function() {
-                            return (this.value > 0 ? '+' : '') + this.value + '%';
-                        }
-                    },
-                    plotLines: [{
-                        value: 0,
-                        width: 2,
-                        color: 'silver'
-                    }]
-                },
-                plotOptions: {
-                    series: {
-                        compare: 'percent',
-                        step: true,
+                for(var j=0;j<value.funds.length;j++){
+                    if(value.funds[j].code == name)
+                        return [value.ts, value.funds[j].count];
+                }
+            }),
+        };
+    });
+    seriesOptions.push({
+        name: 'TOTAL',
+        data: records.map(function (value, index, ar){
+            return [value.ts, value.total_fund];
+        })
+    });
+    //alert(JSON.stringify(seriesOptions));
+    createChart();
+    // create the chart when all data is loaded
+    function createChart() {
+        chart = new Highcharts.StockChart({
+            chart: {
+                renderTo: 'container'
+            },
+            rangeSelector: {
+                selected: 4
+            },
+            yAxis: {
+                labels: {
+                    formatter: function() {
+                        return (this.value > 0 ? '+' : '') + this.value + '%';
                     }
                 },
-                tooltip: {
-                    pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
-                    valueDecimals: 2
-                },
-                series: seriesOptions
-            });
-        }
+                //plotLines: [{
+                //    value: 0,
+                //    width: 2,
+                //    color: 'silver'
+                //}]
+            },
+            //plotOptions: {
+            //    series: {
+            //        compare: 'percent',
+            //        step: true,
+            //    }
+            //},
+            tooltip: {
+                pointFormat: '<span style="color:{series.color}">{series.name}</span>: <b>{point.y}</b> ({point.change}%)<br/>',
+                valueDecimals: 2
+            },
+            series: seriesOptions
+        });
+    }
 }
 function inject_code_to_page(){
     var code = 'setTimeout("document.location.reload(true)",300000);';

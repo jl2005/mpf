@@ -12,6 +12,7 @@
                    "md5.js",
                    "mpf.js",
                    "highstock.js",
+                   "highcharts.js",
                    "exporting.js"
                    ]
         }
