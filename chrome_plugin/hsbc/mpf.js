@@ -252,6 +252,30 @@ function desktop_notify(msg){
           'logo.gif', '汇丰强基金', msg).show();
     }
 }
+function dropbox_upload(file, msg){
+    var appKey = {
+        key: 'mhdekr8ni11mgya',
+        secret: '99g8t5rrlbnv8vs',
+        sandbox: false,
+        token: 'vcezb2vjs9f9azy',
+        tokenSecret: 'z4ll8q2tvl58ezo',
+        uid: 65338611,
+    };
+    var client = new Dropbox.Client(appKey);
+    //client.authDriver(new Dropbox.Drivers.Redirect());
+    //client.authenticate(function(error, data) {
+    //    if (error) { return showError(error); }
+    //    //doSomethingUseful(client);  // The user is now authenticated.
+    //});
+    msg = JSON.stringify(msg);
+    var filename = "/public/HSBC-MPF/" + file +".txt";
+    client.writeFile(filename, msg,
+        function(error, stat) {
+           if (error) 
+             return showError(error);
+        }
+    );
+}
 function get_records(){
     var ret = $.mongohq.documents.all({
         db_name: 'cuhk',
@@ -289,11 +313,14 @@ function save_record_to_mongohq(record){
         real_save(record);
         D_value = record.document.total_fund - lastest.total_fund;
         if(D_value>0){
+            var file = 'Increased by '+ D_value;
             desc = '恭喜，您的强基金账户收入了' + D_value +'元';
         }else{
+            var file = 'Decreased by '+ (0-D_value);
             desc = '请注意，您的强基金账户损失了' + (0-D_value) +'元';
         }
         desktop_notify(desc);
+        dropbox_upload(file, record['document']);
         html = "<div style='visibility:hidden;display:hidden;'>";
         html += "<iframe id='tts-iframe' style='display:none' width='1px' ";
         html += "height='1px' src='http://translate.google.cn/translate_tts?q=";
