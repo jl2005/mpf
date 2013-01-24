@@ -309,9 +309,11 @@ function save_record_to_mongohq(record){
     //   JSON.stringify(lastest.funds)){
     //    real_save(record);
     //}
-    if(record.document.total_fund != lastest.total_fund){
+    lastfund = Math.round(lastest.total_fund*100)/100;
+    if(record.document.total_fund != lastfund){
         real_save(record);
-        D_value = record.document.total_fund - lastest.total_fund;
+        D_value = record.document.total_fund - lastfund;
+        D_value = Math.round(D_value*100)/100;
         if(D_value>0){
             var file = 'Increased by '+ D_value;
             desc = '恭喜，您的强基金账户收入了' + D_value +'元';
@@ -348,6 +350,7 @@ function parse_and_save_record(){
     }
     var d = new Date();
     record['funds'] = money;
+    total = Math.round(total*100)/100;
     record['total_fund'] = total;
     record['year'] = d.getFullYear();
     record['month'] = d.getMonth()+1;
