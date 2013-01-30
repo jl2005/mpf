@@ -315,10 +315,10 @@ function save_record_to_mongohq(record){
         D_value = record.document.total_fund - lastfund;
         D_value = Math.round(D_value*100)/100;
         if(D_value>0){
-            var file = 'Increased by '+ D_value;
+            var file = 'Increased by '+ D_value + ', Now total: '+ record.document.total_fund;
             desc = '恭喜，您的强基金账户收入了' + D_value +'元';
         }else{
-            var file = 'Decreased by '+ (0-D_value);
+            var file = 'Decreased by '+ (0-D_value) + ', Now total: '+ record.document.total_fund;;
             desc = '请注意，您的强基金账户损失了' + (0-D_value) +'元';
         }
         desktop_notify(desc);
