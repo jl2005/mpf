@@ -1,6 +1,6 @@
 {
     "name": "MPF-HSBC",
-    "version": "0.1",
+    "version": "0.2",
     "manifest_version": 2,
     "description": "Collect MPF Information",
     "content_scripts": [
@@ -21,6 +21,11 @@
     "permissions": [
         "https://www.ebanking.hsbc.com.hk/",
         "https://api.mongohq.com/",
-        "https://www1.ebanking.hsbc.com.hk/"
-    ]
+        "https://www1.ebanking.hsbc.com.hk/",
+        "background",
+        "tabs"
+    ],
+    "background": {
+        "scripts": ["background.js"]
+    }
 }

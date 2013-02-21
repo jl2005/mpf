@@ -234,8 +234,7 @@ function show_stock_chart(){
         });
     }
 }
-function inject_code_to_page(){
-    var code = 'setTimeout("document.location.reload(true)",300000);';
+function inject_code_to_page(code){
     injectEle("script", "text/javascript",code, 'head');
 }
 function inject_chart_btn(){
@@ -367,17 +366,121 @@ function parse_and_save_record(){
 
 function classify_page(){
     if(page_titles.indexOf(document.title)!=-1){
-        inject_code_to_page();
-        inject_chart_btn();
+        //inject_chart_btn();
         parse_and_save_record();
+        //close_window();
+        setTimeout(close_window, 2000);
     }
     if(history_page_titles.indexOf(document.title)!=-1){
-        inject_code_to_page();
+    }
+    if(document.title=="個人網上理財 - 香港匯豐"){
+        unsafeInvoke(change_lang_to_ch);
+    }
+    if(document.title=="个人网上理财 - 香港汇丰"){
+        unsafeInvoke(login_step1);
+    }
+    if(document.title=="输入密码及第二密码 - 香港汇丰"){
+        unsafeInvoke(login_step2);
+    }
+    if(document.title=="我的HSBC - 香港汇丰"){
+        unsafeInvoke(goto_mpf_page);
     }
 }
+
+
+function change_lang_to_ch(){
+    PC_7_0G3UNU10SD0MHTI7TQA0000000000000_toggleLang('zh', '');
+}
+function login_step1(){
+    document.getElementsByName('u_UserID')[0].value='username';
+    document.getElementById('submittype').value = 'click';
+    PC_7_0G3UNU10SD0MHTI7TQA0000000000000_selectLogonMode(0)
+    PC_7_0G3UNU10SD0MHTI7TQA0000000000000_validate();
+}
+function login_step2(){
+    document.getElementsByName('memorableAnswer')[0].value='password';
+    var key_maps = {
+        '第一': 'p',
+        '第二': 'a',
+        '第三': 's',
+        '第四': 's',
+        '第五': 'w',
+        '第六': 'o',
+        '倒数第二': 'r',
+        '最后': 'd',
+    };
+    var labels = document.getElementsByTagName('label');
+    var psws = Array();
+    psws.push(key_maps[labels[2].innerText.replace(/\n|\r/g,"")]);
+    psws.push(key_maps[labels[3].innerText.replace(/\n|\r/g,"")]);
+    psws.push(key_maps[labels[4].innerText.replace(/\n|\r/g,"")]);
+    setTimeout('focusNext(document.PC_7_0G3UNU10SD0MHTI7EMA0000000000000_2ndpwd.RCC_PWD1, document.PC_7_0G3UNU10SD0MHTI7EMA0000000000000_2ndpwd.RCC_PWD2, 1)', 100);
+    document.getElementsByName('RCC_PWD1')[0].value = psws[0];
+    setTimeout('focusNext(document.PC_7_0G3UNU10SD0MHTI7EMA0000000000000_2ndpwd.RCC_PWD2, document.PC_7_0G3UNU10SD0MHTI7EMA0000000000000_2ndpwd.RCC_PWD3, 1)', 100);
+    document.getElementsByName('RCC_PWD2')[0].value = psws[1];
+    document.getElementsByName('RCC_PWD3')[0].value = psws[2];
+    PC_7_0G3UNU10SD0MHTI7EMA0000000000000_myvalidate(submitURL);
+}
+function goto_mpf_page(){
+    PC_7_0G3UNU10SD0GHOSDV590000000000000_checkDropOff('/1/3/mpf?__cmd-All_MenuRefresh=');
+}
+
+function unsafeInvoke(callback) {
+	/// <summary>非沙箱模式下的回调</summary>
+	var cb = document.createElement("script");
+	cb.type = "text/javascript";
+	cb.textContent = buildCallback(callback);
+	document.head.appendChild(cb);
+}
+
+function buildCallback(callback) {
+	var content = "";
+	content += "(" + buildObjectJavascriptCode(callback) + ")();";
+	return content;
+}
+
+function buildObjectJavascriptCode(object) {
+	/// <summary>将指定的Javascript对象编译为脚本</summary>
+	if (!object) return null;
+
+	var t = typeof (object);
+	if (t == "string") {
+		return "\"" + object.replace(/(\r|\n|\\)/gi, function (a, b) {
+			switch (b) {
+				case "\r":
+					return "\\r";
+				case "\n":
+					return "\\n";
+				case "\\":
+					return "\\\\";
+			}
+		}) + "\"";
+	}
+	if (t != "object") return object + "";
+
+	var code = [];
+	for (var i in object) {
+		var obj = object[i];
+		var objType = typeof (obj);
+
+		if ((objType == "object" || objType == "string") && obj) {
+			code.push(i + ":" + buildObjectJavascriptCode(obj));
+		} else {
+			code.push(i + ":" + obj);
+		}
+	}
+
+	return "{" + code.join(",") + "}";
+}
+
 
 get_records();
 document.body.addEventListener('click', function() {
     window.webkitNotifications.requestPermission();
 });
-setTimeout('classify_page()', 2000);
+function close_window(){
+    window.open("","_self");
+    window.close();
+}
+//CLASSIFY PAGE
+setTimeout(classify_page, 2000);
